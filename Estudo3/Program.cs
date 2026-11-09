@@ -3,7 +3,6 @@ using Estudo3.Control.Interfaces;
 using Estudo3.Control.Observers;
 using Estudo3.Control.Strategies;
 using Estudo3.Entidade;
-using System.Collections.Generic;
 
 namespace Estudo3
 {
