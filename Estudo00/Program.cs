@@ -112,6 +112,28 @@ namespace Estudo00
             var recuperacao = alunos.Where(a => controlaAluno.Media(a) >= 5.0m && controlaAluno.Media(a) < 7.0m).ToList();
             var reprovados = alunos.Where(a => controlaAluno.Media(a) < 5.0m).ToList();
 
+            decimal notaMaxima = alunos.Max(a => controlaAluno.Media(a));
+            decimal notaMinima = alunos.Min(a => controlaAluno.Media(a));
+
+            var alunoNotaMaxima = alunos.First(a => controlaAluno.Media(a) == notaMaxima);
+
+            // Exibindo as propriedades individualmente
+            Console.WriteLine("=== ALUNO COM A MAIOR NOTA ===");
+            Console.WriteLine($"Nome: {alunoNotaMaxima.Nome}");
+            Console.WriteLine($"Escola: {alunoNotaMaxima.Escola}");
+            Console.WriteLine($"Série: {alunoNotaMaxima.Serie}");
+            Console.WriteLine($"Média: {controlaAluno.Media(alunoNotaMaxima):F1}");
+
+            var alunoNotaMinima = alunos.First(a => controlaAluno.Media(a) == notaMinima);
+
+            // Exibindo as propriedades individualmente
+            Console.WriteLine("=== ALUNO COM A MENOR NOTA ===");
+            Console.WriteLine($"Nome: {alunoNotaMinima.Nome}");
+            Console.WriteLine($"Escola: {alunoNotaMinima.Escola}");
+            Console.WriteLine($"Série: {alunoNotaMinima.Serie}");
+            // Correto:
+            Console.WriteLine($"Média: {controlaAluno.Media(alunoNotaMinima):F1}");
+
             // Exibindo Estatísticas Gerais de Contagem
             Console.WriteLine("==================================================");
             Console.WriteLine($"📊 RESUMO GERAL DA TURMA: Total de {alunos.Count} alunos");
@@ -142,6 +164,167 @@ namespace Estudo00
             foreach (var aluno in reprovados)
             {
                 Console.WriteLine($"-> {aluno.Nome} | Média: {controlaAluno.Media(aluno):F1} | Escola: {aluno.Escola}");
+            }
+
+            // Ordena a lista inteira da maior média para a menor e pega os 3 primeiros colocados
+            var top3Alunos = alunos.OrderByDescending(a => controlaAluno.Media(a)).Take(3).ToList();
+
+            Console.WriteLine("==================================================");
+            Console.WriteLine("🏆 PODIUM DA TURMA (TOP 3)");
+            Console.WriteLine("==================================================");
+
+            int posicao = 1;
+            foreach (var aluno in top3Alunos)
+            {
+                decimal media = controlaAluno.Media(aluno);
+
+                string medalha = posicao switch
+                {
+                    1 => "🥇 1º Lugar:",
+                    2 => "🥈 2º Lugar:",
+                    3 => "🥉 3º Lugar:",
+                    _ => $"{posicao}º Lugar:"
+                };
+
+                Console.WriteLine($"{medalha} {aluno.Nome} | Média: {media:F1} | Escola: {aluno.Escola}");
+                posicao++;
+            }
+            Console.WriteLine("==================================================");
+
+            // 1. Encontra o aluno com a maior média DENTRO da Recuperação
+            var melhorRecuperacao = recuperacao
+                .OrderByDescending(a => controlaAluno.Media(a))
+                .FirstOrDefault();
+
+            // 2. Encontra o aluno com a maior média DENTRO dos Reprovados (o "quase" aprovado que bateu na trave)
+            var melhorReprovado = reprovados
+                .OrderByDescending(a => controlaAluno.Media(a))
+                .FirstOrDefault();
+
+            Console.WriteLine("==================================================");
+            Console.WriteLine("🔍 DESTAQUES DOS GRUPOS CRÍTICOS:");
+            Console.WriteLine("==================================================");
+
+            if (melhorRecuperacao != null)
+            {
+                Console.WriteLine($"🟡 1º Lugar na Recuperação (Maior nota do grupo):");
+                Console.WriteLine($"   -> {melhorRecuperacao.Nome} | Média: {controlaAluno.Media(melhorRecuperacao):F1} | Escola: {melhorRecuperacao.Escola}");
+            }
+            else
+            {
+                Console.WriteLine("🟡 Não há alunos em recuperação na lista.");
+            }
+
+            Console.WriteLine("--------------------------------------------------");
+
+            if (melhorReprovado != null)
+            {
+                Console.WriteLine($"🔴 1º Lugar nos Reprovados (Quem chegou mais perto de passar):");
+                Console.WriteLine($"   -> {melhorReprovado.Nome} | Média: {controlaAluno.Media(melhorReprovado):F1} | Escola: {melhorReprovado.Escola}");
+            }
+            else
+            {
+                Console.WriteLine("🔴 Não há alunos reprovados na lista.");
+            }
+            Console.WriteLine("==================================================");
+
+            // 1. RANKING DE REPROVAÇÃO (Do que tirou a menor nota para o que chegou mais perto)
+            var rankingReprovados = reprovados.OrderBy(a => controlaAluno.Media(a)).ToList();
+
+            // 2. RANKING DE RECUPERAÇÃO (Do que tirou a nota mais baixa da recuperação até o que ficou mais próximo de passar)
+            var rankingRecuperacao = recuperacao.OrderBy(a => controlaAluno.Media(a)).ToList();
+
+            // ==========================================
+            // EXIBINDO O RANKING DE REPROVAÇÃO (Top piores)
+            // ==========================================
+            Console.WriteLine("==================================================");
+            Console.WriteLine("🔴 RANKING DE REPROVAÇÃO (Do 1º ao 3º mais crítico):");
+            Console.WriteLine("==================================================");
+
+            int posReprovado = 1;
+            // Exibe até os 3 primeiros do ranking de reprovação (ou quantos tiverem)
+            foreach (var aluno in rankingReprovados.Take(3))
+            {
+                decimal media = controlaAluno.Media(aluno);
+                Console.WriteLine($"{posReprovado}º Lugar: {aluno.Nome} | Média: {media:F1} | Escola: {aluno.Escola}");
+                posReprovado++;
+            }
+
+            if (!rankingReprovados.Any())
+            {
+                Console.WriteLine("Nenhum aluno reprovado na lista!");
+            }
+
+            // ==========================================
+            // EXIBINDO O RANKING DE RECUPERAÇÃO 
+            // ==========================================
+            Console.WriteLine("\n==================================================");
+            Console.WriteLine("🟡 RANKING DE RECUPERAÇÃO (Do 1º ao 3º mais crítico):");
+            Console.WriteLine("==================================================");
+
+            int posRecuperacao = 1;
+            foreach (var aluno in rankingRecuperacao.Take(3))
+            {
+                decimal media = controlaAluno.Media(aluno);
+                Console.WriteLine($"{posRecuperacao}º Lugar: {aluno.Nome} | Média: {media:F1} | Escola: {aluno.Escola}");
+                posRecuperacao++;
+            }
+
+            if (!rankingRecuperacao.Any())
+            {
+                Console.WriteLine("Nenhum aluno em recuperação na lista!");
+            }
+            Console.WriteLine("==================================================");
+
+            // Pega os alunos em recuperação e ordena do MAIOR para o MENOR (pegando o topo da recuperação)
+            var primeiroDaRecuperacao = recuperacao
+                .OrderByDescending(a => controlaAluno.Media(a))
+                .FirstOrDefault();
+
+            Console.WriteLine("==================================================");
+            Console.WriteLine("🟡 1º LUGAR NA RECUPERAÇÃO (Quem tirou a maior nota do grupo):");
+            Console.WriteLine("==================================================");
+
+            if (primeiroDaRecuperacao != null)
+            {
+                decimal media = controlaAluno.Media(primeiroDaRecuperacao);
+                Console.WriteLine($"-> {primeiroDaRecuperacao.Nome} | Média: {media:F1} | Escola: {primeiroDaRecuperacao.Escola}");
+            }
+            else
+            {
+                Console.WriteLine("Não há alunos em recuperação na lista!");
+            }
+            Console.WriteLine("==================================================");
+
+            // 1. Quantidade total de alunos na lista
+            int totalAlunos = alunos.Count;
+            Console.WriteLine($"Total de alunos na lista: {totalAlunos}");
+
+            // 2. Filtrando quem tirou na segunda nota um valor MAIOR que na primeira nota
+            var alunosQueMelhoraram = alunos.Where(a => a.Nota2 > a.Nota1).ToList();
+
+            Console.WriteLine($"\nAlunos que melhoraram da primeira para a segunda nota ({alunosQueMelhoraram.Count} alunos):");
+            Console.WriteLine("--------------------------------------------------");
+
+            foreach (var aluno in alunosQueMelhoraram)
+            {
+                Console.WriteLine($"-> {aluno.Nome} | 1ª Nota: {aluno.Nota1} | 2ª Nota: {aluno.Nota2}");
+            }
+
+            Console.WriteLine("==================================================");
+            Console.WriteLine("📋 LISTA COMPLETA DE ALUNOS NUMERADOS:");
+            Console.WriteLine("==================================================\n");
+
+            int numero = 1; // Inicializa o contador
+
+            foreach (var aluno in alunos)
+            {
+                decimal media = controlaAluno.Media(aluno);
+
+                // Imprime o número do aluno seguido dos dados dele
+                Console.WriteLine($"{numero}º Aluno: {aluno.Nome} | Média: {media:F1} | Escola: {aluno.Escola}");
+
+                numero++; // Incrementa o número para o próximo aluno
             }
         }
     }
